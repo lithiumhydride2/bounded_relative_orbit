@@ -27,3 +27,22 @@ def gengrate_sample(model, cond, num_samples=100, sample_std=1.0):
     with torch.no_grad():
         samples = model.decoder(z, cond)
     return samples.numpy()
+
+
+def gengrate_sample_mle(f_model,
+                        target_y,
+                        num_candidates=10000,
+                        num_sample=20):
+    f_model.eval()
+    with torch.no_grad():
+
+        x_candidates = torch.rand(num_candidates, 4)  # 假设 [0,1] 区间
+
+        y_preds = f_model(x_candidates)
+
+        target_tensor = torch.tensor(target_y,
+                                     dtype=torch.float32).unsqueeze(0)
+        errors = torch.norm(y_preds - target_tensor, dim=1)
+
+        top_indices = torch.topk(-errors, k=num_sample).indices
+        return x_candidates[top_indices]
